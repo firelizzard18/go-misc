@@ -15,13 +15,13 @@ const (
 	// ChannelOpSuccess indicates a successful channel operation
 	ChannelOpSuccess ChannelOpResult = iota
 
-	// ChannelOpSuccess indicates an unsuccessful channel operation
+	// ChannelOpFailure indicates an unsuccessful channel operation
 	ChannelOpFailure
 
-	// ChannelOpSuccess indicates that a channel operation timed out
+	// ChannelOpTimeout indicates that a channel operation timed out
 	ChannelOpTimeout
 
-	// ChannelOpSuccess indicates that a channel operation failed due to the channel closing
+	// ChannelOpClosed indicates that a channel operation failed due to the channel closing
 	ChannelOpClosed
 )
 
@@ -67,9 +67,8 @@ func (ch SyncChannel) Recv() ChannelOpResult {
 	_, ok := <- ch
 	if ok {
 		return ChannelOpSuccess
-	} else {
-		return ChannelOpClosed
 	}
+	return ChannelOpClosed
 }
 
 // TryRecv attempts to read a signal from the channel. If the channel cannot be
@@ -81,9 +80,8 @@ func (ch SyncChannel) TryRecv() ChannelOpResult {
 	case _, ok := <- ch:
 		if ok {
 			return ChannelOpSuccess
-		} else {
-			return ChannelOpClosed
 		}
+		return ChannelOpClosed
 	default:
 		return ChannelOpFailure
 	}
@@ -98,9 +96,8 @@ func (ch SyncChannel) TimeoutRecv(timeout time.Duration) ChannelOpResult {
 	case _, ok := <- ch:
 		if ok {
 			return ChannelOpSuccess
-		} else {
-			return ChannelOpClosed
 		}
+		return ChannelOpClosed
 	case <- Timeout(timeout):
 		return ChannelOpTimeout
 	}

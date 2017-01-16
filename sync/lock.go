@@ -43,9 +43,8 @@ func (l *lock) Acquire() Unlock {
 func (l *lock) TryAcquire() (Unlock, bool) {
 	if l.ch.TrySend() == ChannelOpSuccess {
 		return l.newUnlock(), true
-	} else {
-		return nil, false
 	}
+	return nil, false
 }
 
 func (l *lock) newUnlock() Unlock {

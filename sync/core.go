@@ -9,7 +9,9 @@ import (
 	"time"
 )
 
+// Destroyable is a synchronization tool that can be destroyed.
 type Destroyable interface {
+	// Destroy gracefully closes all channels assocaited with Destroyable.
 	Destroy()
 }
 
