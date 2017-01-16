@@ -1,2 +1,2 @@
-# Go Channel Sync
+# Go Channel Sync [![GoDoc](https://godoc.org/github.com/firelizzard18/go-misc/sync?status.svg)](https://godoc.org/github.com/firelizzard18/go-misc/sync)
 Synchronization primitives based on only channels

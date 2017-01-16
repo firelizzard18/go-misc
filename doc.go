@@ -1,4 +1,0 @@
-/*
-Miscellaneous Gocode
-*/
-package misc
