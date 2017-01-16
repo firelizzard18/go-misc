@@ -1,0 +1,142 @@
+package chansync
+
+type Semaphore interface {
+	SynchronizationPrimitive
+	Count() int
+	Available() int
+
+	Acquire(n int) Unsemaphore
+	TryAcquire(n int) (Unsemaphore, bool)
+
+	AcquireOne() Unsemaphore // acquire one
+	TryAcquireOne() (Unsemaphore, bool)
+}
+
+type Unsemaphore interface {
+	SynchronizationPrimitive
+	Remaining() int
+	Release(n int)
+	ReleaseAll() // release all
+}
+
+type semaphore struct {
+	ch echan
+	size int
+}
+
+type unsemaphore struct {
+	ch echan
+	remaining AtomicInt
+}
+
+func NewSemaphore(size, start int) Semaphore {
+	if size < 1 {
+		panic("Invalid semaphore total resource count (negative or zero")
+	}
+
+	if start < 0 {
+		panic("Invalid semaphore starting resource count (negative)")
+	}
+
+	if start > size {
+		panic("Invalid semaphore starting resource count (less than total count)")
+	}
+
+	s := &semaphore{
+		ch: makeEChanN(size),
+		size: size,
+	}
+
+	for i := 0; i < start; i++ {
+		s.ch.send()
+	}
+
+	return s
+}
+
+func (s *semaphore) Destroy() {
+	s.ch.close()
+}
+
+func (s *semaphore) Count() int {
+	return s.size
+}
+
+func (s *semaphore) Available() int {
+	return len(s.ch)
+}
+
+func (s *semaphore) Acquire(n int) Unsemaphore {
+	if n > s.size {
+		panic("Tried to acquire more resources than the semaphore is capable of having")
+	}
+
+	for i := 0; i < n; i++ {
+		s.ch.recv()
+	}
+
+	return s.newUnsemaphore(n)
+}
+
+func (s *semaphore) TryAcquire(n int) (Unsemaphore, bool) {
+	if n > s.size {
+		panic("Tried to acquire more resources than the semaphore is capable of having")
+	}
+
+	var i int
+	for i = 0; i < n; i++ {
+		if !s.ch.tryRecv() {
+			break
+		}
+	}
+
+	if i == n {
+		return s.newUnsemaphore(n), true
+	}
+
+	for ; i >= 0; i-- {
+		s.ch.send()
+	}
+	return nil, false
+}
+
+func (s *semaphore) AcquireOne() Unsemaphore {
+	return s.Acquire(1)
+}
+
+func (s *semaphore) TryAcquireOne() (Unsemaphore, bool) {
+	return s.TryAcquire(1)
+}
+
+func (s *semaphore) newUnsemaphore(taken int) *unsemaphore {
+	return &unsemaphore{
+		ch: s.ch,
+		remaining: NewAtomicInt(taken),
+	}
+}
+
+func (u *unsemaphore) Destroy() {
+	u.remaining.Destroy()
+	u.ch.close()
+}
+
+func (u *unsemaphore) Remaining() int {
+	return u.remaining.Read()
+}
+
+func (u *unsemaphore) Release(n int) {
+	for n > 0 {
+		if u.remaining.Read() == 0 {
+			return
+		}
+
+		u.ch.send()
+
+		// continuously attempt to decrement the counter until it succeeds
+		for !Decrement(u.remaining) {}
+	}
+}
+
+func (u *unsemaphore) ReleaseAll() {
+	u.Release(u.Remaining())
+}
