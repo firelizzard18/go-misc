@@ -1,3 +1,20 @@
+/*
+Package main generates definitions for github.com/firelizzard18/go-misc/sync.
+
+Usage:
+
+	go run /path/to/main.go [safe|atomic] <package> <Name> <type> <file>
+
+Examples (relative to github.com/firelizzard18/go-misc/sync):
+
+	go run ../main.go safe chansync Int int safe.int.go
+
+Generates github.com/firelizzard18/go-misc/blob/master/sync/safe.int.go
+
+	go run ../main.go atomic chansync Int int atomic.int.go
+
+Generates github.com/firelizzard18/go-misc/blob/master/sync/atomic.int.go
+*/
 package main
 
 import (
@@ -15,6 +32,7 @@ const (
 */`
 
 	s_safe = `
+
 // Safe%[1]s is a concurrency-safe %[2]s.
 type Safe%[1]s interface {
 	// Read returns the internal %[2]s value.

@@ -4,6 +4,7 @@ package chansync
 * CODE GENERATED AUTOMATICALLY WITH github.com/firelizzard18/go-misc/sync/gen
 * THIS FILE SHOULD NOT BE EDITED BY HAND
 */
+
 // SafeInt is a concurrency-safe int.
 type SafeInt interface {
 	// Read returns the internal int value.

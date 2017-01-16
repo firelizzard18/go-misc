@@ -4,6 +4,7 @@ package chansync
 * CODE GENERATED AUTOMATICALLY WITH github.com/firelizzard18/go-misc/sync/gen
 * THIS FILE SHOULD NOT BE EDITED BY HAND
 */
+
 // SafeBool is a concurrency-safe bool.
 type SafeBool interface {
 	// Read returns the internal bool value.
