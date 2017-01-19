@@ -4,22 +4,60 @@ import (
 	"time"
 )
 
-
+// ReadWrite lock is a lock that can be used to control read and write access
+// to a resource. A read lock cannot be acquired if the write lock is active. A
+// read lock can be acquired if other read locks are active. A write lock
+// cannot be acquired if any other locks are active.
+//
+// Simultaneous calls to AcquireRead or TryAcquireRead will block each other.
+// This is to provide consistency and logical behavior.
+//
+// ReadUnlock and WriteUnlock objects must be discarded after any method is
+// called. The only exception is ReadUnlock.TryPromote, if and only if it fails
+// to promote the lock.
 type ReadWriteLock interface {
+	// AcquireRead blocks until a read lock can be acquired. AcquireRead
+	// returns a ReadUnlock associated with the acquired lock.
 	AcquireRead() ReadUnlock
+
+	// TryAcquireRead attempts to acquire a read lock. If a lock cannot be
+	// acquired, TryAcquireRead returns (nil, false). If a lock is acquired,
+	// TryAcquireRead returns a (ReadUnlock, true) pair. The ReadUnlock is
+	// associated with the acquired lock.
 	TryAcquireRead() (ReadUnlock, bool)
+
+	// AcquireWrite block until the write lock can be acquired. AcquireWrite
+	// returns a WriteUnlock associated with the acquired lock.
 	AcquireWrite() WriteUnlock
+
+	// TryAcquireWrite attempts to acquire a write lock. If the lock cannot be
+	// acquired, TryAcquireWrite returns (nil, false). If the lock is acquired,
+	// TryAcquireWrite returns a (WriteUnlock, true) pair. The WriteUnlock is
+	// associated with the acquired write.
 	TryAcquireWrite() (WriteUnlock, bool)
 }
 
+// ReadUnlock represents a read lock acquired from an instance of
+// ReadWriteLock. A read lock can be released, or promoted to a write lock.
 type ReadUnlock interface {
+	// Release releases the read lock.
 	Release()
+
+	// Promote block until the read lock can be promoted into a write lock.
+	// Promote returns a WriteUnlock associated with the promoted lock.
 	Promote() WriteUnlock
+
+	// TryPromote attempts to promote the read lock into a write lock. Promote
+	// returns a WriteUnlock associated with the promoted lock.
 	TryPromote() (WriteUnlock, bool)
 }
 
 type WriteUnlock interface {
+	// Release releases the write lock.
 	Release()
+
+	// Demote demotes the write lock into a read lock. Demote always returns
+	// immediately.
 	Demote() ReadUnlock
 }
 
