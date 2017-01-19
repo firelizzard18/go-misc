@@ -77,6 +77,7 @@ type wunlock struct {
 	lock *rwlock
 }
 
+// NewReadWriteLock returns a new read-write lock
 func NewReadWriteLock() ReadWriteLock {
 	l := &rwlock{
 		write: NewLock(),
